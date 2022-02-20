@@ -40,41 +40,11 @@ abstract class Collection implements Countable, IteratorAggregate
         return \count($this->items());
     }
 
-    abstract public static function fromPrimitives(array $primitives): static;
-
-    abstract public function toPrimitives(): array;
-
-    final public function value(): array
-    {
-        return $this->toPrimitives();
-    }
-
-    public static function mergeWithUniqueness(self ...$arrayCollections): static
-    {
-        $mergedCollection = flat_map(fn(self $collection) => $collection->items(), $arrayCollections);
-
-        return new static(array_values(array_unique($mergedCollection)));
-    }
-
     public function contains(mixed $item): bool
     {
         Assert::instanceOf(static::type(), $item);
 
         return \in_array($item, $this->items(), false);
-    }
-
-    public function copyWith(mixed $item): static
-    {
-        Assert::instanceOf(static::type(), $item);
-
-        return new static([$item, ...$this]);
-    }
-
-    public function copyWithUniqueness(mixed $item): static
-    {
-        Assert::instanceOf(static::type(), $item);
-
-        return new static(array_values(array_unique([$item, ...$this])));
     }
 
     protected function each(callable $fn): void
