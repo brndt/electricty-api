@@ -1,0 +1,46 @@
+version: '3.7'
+services:
+
+  electricity-php:
+    build:
+      ./etc/php
+    container_name: electricity-php
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - electricity-network
+
+  electricity-mysql:
+    image: mysql:5.7
+    container_name: electricity-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ELECTRICITY_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${ELECTRICITY_DATABASE_NAME}
+      MYSQL_USER: ${ELECTRICITY_DATABASE_USER}
+      MYSQL_PASSWORD: ${ELECTRICITY_DATABASE_PASSWORD}
+    volumes:
+      - ./etc/mysql/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    networks:
+      - electricity-network
+
+  electricity-nginx:
+    image: nginx:alpine
+    container_name: electricity-nginx
+    restart: unless-stopped
+    tty: true
+    ports: [ "80:80" ]
+    volumes:
+      - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf:cached
+      - ./etc/nginx/conf.d/:/etc/nginx/conf.d/:cached
+    networks:
+      - electricity-network
+
+networks:
+  electricity-network:
+    driver: bridge
+volumes:
+###> doctrine/doctrine-bundle ###
+  db-data:
+###< doctrine/doctrine-bundle ###
