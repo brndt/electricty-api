@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Electricity\Readings\Application\SearchSuspiciousReadings;
 
-use Electricity\Readings\Domain\Reading;
-use Electricity\Readings\Domain\Readings;
+use Electricity\Readings\Domain\ClientWithReadings;
+use Electricity\Readings\Domain\ReadingByPeriod;
 use Electricity\Readings\Domain\ReadingsRepository;
 
-use Electricity\Readings\Domain\SuspiciousReading;
-
+use function Lambdish\Phunctional\flat_map;
 use function Lambdish\Phunctional\map;
 
 final class SearchSuspiciousReadingsApplicationService
@@ -20,22 +19,36 @@ final class SearchSuspiciousReadingsApplicationService
 
     public function __invoke(): SuspiciousReadingCollectionResponse
     {
-        $readings = $this->readingsRepository->all();
+        $clientsWithReadings = $this->readingsRepository->all();
 
-        $suspiciousReadings = map(
-            fn(Reading $reading): SuspiciousReading => new SuspiciousReading(
-                $reading->clientId,
-                $reading->period,
-                $reading->reading,
-                '50',
-            ),
-            $readings
+        $clientsWithOrderedReadings = map(
+            fn(ClientWithReadings $clientReadings) => $clientReadings->sortReadingsByAsc(),
+            $clientsWithReadings
         );
 
-        $readingsAsResponse = map(
-            fn(SuspiciousReading $suspiciousReading) => SuspiciousReadingResponse::fromSuspiciousReading(
-                $suspiciousReading
-            ), $suspiciousReadings
+        $clientsWithCalculatedMedians = map(
+            fn(ClientWithReadings $clientReadings) => $clientReadings->withCalculatedMedian(),
+            $clientsWithOrderedReadings
+        );
+
+
+        $clientsWithSuspiciousReadings =
+            map(
+                fn(ClientWithReadings $clientReadings) => $clientReadings->filteredBySuspiciousReadings(),
+                $clientsWithCalculatedMedians
+            );
+
+        $readingsAsResponse = flat_map(
+            fn(ClientWithReadings $clientWithReadings) => map(
+                fn(ReadingByPeriod $readingByPeriod) => new SuspiciousReadingResponse(
+                    $clientWithReadings->clientId->value,
+                    $readingByPeriod->period,
+                    $readingByPeriod->reading,
+                    $clientWithReadings->median()->asString()
+                ),
+                $clientWithReadings->readings
+            ),
+            $clientsWithSuspiciousReadings
         );
 
         return new SuspiciousReadingCollectionResponse($readingsAsResponse);

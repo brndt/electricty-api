@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Electricity\Readings\Infrastructure\Persistence\Csv;
 
-use Electricity\Readings\Domain\Reading;
-use Electricity\Readings\Domain\Readings;
+use Electricity\Readings\Domain\ClientId;
+use Electricity\Readings\Domain\ClientWithReadings;
+use Electricity\Readings\Domain\ReadingByPeriod;
 use Electricity\Readings\Domain\ReadingsRepository;
 use League\Csv\Reader;
 
+use function Lambdish\Phunctional\group_by;
 use function Lambdish\Phunctional\map;
 
 final class CsvReadingsRepository implements ReadingsRepository
@@ -21,22 +23,28 @@ final class CsvReadingsRepository implements ReadingsRepository
         $this->csvReader->setHeaderOffset(0);
     }
 
-    public function all(): Readings
+    public function all(): array
     {
         $readingsAsPrimitives = $this->csvReader->getRecords();
 
-        return new Readings($this->readingsFromPrimitives($readingsAsPrimitives));
+        $readingsGroupedByClientId = group_by(
+            fn($readingAsPrimitive): string => $readingAsPrimitive['client'],
+            $readingsAsPrimitives
+        );
+
+        return $this->readingsFromPrimitives($readingsGroupedByClientId);
     }
 
-    private function readingsFromPrimitives(\Iterator $readingsAsPrimitives): array
+    private function readingsFromPrimitives(array $readingsGroupedByClientId): array
     {
         return map(
-            fn(array $readingAsPrimitive): Reading => Reading::fromPrimitives(
-                $readingAsPrimitive['client'],
-                $readingAsPrimitive['period'],
-                $readingAsPrimitive['reading'],
+            fn(array $clientReadings, string $clientId): ClientWithReadings => new ClientWithReadings(
+                new ClientId($clientId), map(fn(array $readingRow) => new ReadingByPeriod(
+                $readingRow['period'],
+                $readingRow['reading']
+            ), $clientReadings),
             ),
-            $readingsAsPrimitives
+            $readingsGroupedByClientId
         );
     }
 }

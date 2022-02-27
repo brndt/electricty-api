@@ -6,5 +6,5 @@ namespace Electricity\Readings\Domain;
 
 interface ReadingsRepository
 {
-    public function all(): Readings;
+    public function all(): array;
 }
