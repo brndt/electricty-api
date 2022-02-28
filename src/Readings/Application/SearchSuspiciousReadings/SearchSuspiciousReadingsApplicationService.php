@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Electricity\Readings\Application\SearchSuspiciousReadings;
 
+use Closure;
 use Electricity\Readings\Domain\ClientWithCalculatedMedian;
 use Electricity\Readings\Domain\ClientWithReadings;
 use Electricity\Readings\Domain\ReadingByPeriod;
@@ -20,39 +21,52 @@ final class SearchSuspiciousReadingsApplicationService
 
     public function __invoke(): SuspiciousReadingCollectionResponse
     {
-        $clientsWithReadings = $this->readingsRepository->all();
+        $readings = $this->readingsRepository->all();
 
-        $clientsWithOrderedReadings = map(
-            fn(ClientWithReadings $readings) => $readings->sortReadingsByAsc(),
-            $clientsWithReadings
-        );
+        $sortedReadings = map($this->sortReadingsForEveryClient(), $readings);
 
-        $clientsWithCalculatedMedians = map(
-            fn(ClientWithReadings $readings) => ClientWithCalculatedMedian::create(
-                $readings->clientId,
-                $readings->readings
-            ),
-            $clientsWithOrderedReadings
-        );
+        $readingsWithCalculatedMedian = map($this->calculateMedianForClient(), $sortedReadings);
 
-        $clientsWithSuspiciousReadings = map(
-            fn(ClientWithCalculatedMedian $readings) => $readings->filteredBySuspicious(),
-            $clientsWithCalculatedMedians
-        );
+        $readingsFilteredBySuspicious = map($this->searchSuspiciousReadingsForClient(), $readingsWithCalculatedMedian);
 
-        $readingsAsResponse = flat_map(
-            fn(ClientWithCalculatedMedian $clientWithReadings) => map(
-                fn(ReadingByPeriod $readingByPeriod) => new SuspiciousReadingResponse(
-                    $clientWithReadings->clientId->value,
-                    $readingByPeriod->period,
-                    $readingByPeriod->reading,
-                    $clientWithReadings->median->asString()
-                ),
-                $clientWithReadings->readings
-            ),
-            $clientsWithSuspiciousReadings
-        );
+        $readingsAsResponse = flat_map($this->suspiciousReadingsResponseExtractor(), $readingsFilteredBySuspicious);
 
         return new SuspiciousReadingCollectionResponse($readingsAsResponse);
+    }
+
+    private function sortReadingsForEveryClient(): Closure
+    {
+        return fn(ClientWithReadings $readings) => $readings->sortReadingsByAsc();
+    }
+
+    private function calculateMedianForClient(): Closure
+    {
+        return fn(ClientWithReadings $readings) => ClientWithCalculatedMedian::create(
+            $readings->clientId,
+            $readings->readings
+        );
+    }
+
+    private function searchSuspiciousReadingsForClient(): Closure
+    {
+        return fn(ClientWithCalculatedMedian $readings) => $readings->filteredBySuspicious();
+    }
+
+    private function suspiciousReadingsResponseExtractor(): Closure
+    {
+        return fn(ClientWithCalculatedMedian $clientWithReadings) => map(
+            $this->suspiciousReadingResponseExtractor($clientWithReadings),
+            $clientWithReadings->readings
+        );
+    }
+
+    private function suspiciousReadingResponseExtractor(ClientWithCalculatedMedian $clientWithReadings): Closure
+    {
+        return fn(ReadingByPeriod $readingByPeriod) => new SuspiciousReadingResponse(
+            $clientWithReadings->clientId->value,
+            $readingByPeriod->period,
+            $readingByPeriod->reading,
+            $clientWithReadings->median->asString()
+        );
     }
 }

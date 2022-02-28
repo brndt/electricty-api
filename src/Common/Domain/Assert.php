@@ -6,6 +6,8 @@ namespace Electricity\Common\Domain;
 
 use InvalidArgumentException;
 
+use function get_class;
+
 final class Assert
 {
     public static function arrayOf(string $class, array $items): void
@@ -17,9 +19,9 @@ final class Assert
 
     public static function instanceOf(string $class, mixed $item): void
     {
-        if (! $item instanceof $class) {
+        if (!$item instanceof $class) {
             throw new InvalidArgumentException(
-                sprintf('The object <%s> is not an instance of <%s>', $class, \get_class($item))
+                sprintf('The object <%s> is not an instance of <%s>', $class, get_class($item))
             );
         }
     }

@@ -16,6 +16,16 @@ final class Filters extends Collection
         return new self(array_map(self::filterBuilder(), $primitives));
     }
 
+    private static function filterBuilder(): callable
+    {
+        return fn(array $values) => Filter::fromValues($values);
+    }
+
+    public static function type(): string
+    {
+        return Filter::class;
+    }
+
     public function filters(): array
     {
         return $this->items();
@@ -24,7 +34,7 @@ final class Filters extends Collection
     public function serialize(): string
     {
         return reduce(
-            static fn (string $accumulate, Filter $filter) => sprintf('%s^%s', $accumulate, $filter->serialize()),
+            static fn(string $accumulate, Filter $filter) => sprintf('%s^%s', $accumulate, $filter->serialize()),
             $this->items(),
             ''
         );
@@ -33,22 +43,12 @@ final class Filters extends Collection
     public function toPrimitives(): array
     {
         return map(
-            fn (Filter $filter) => [
+            fn(Filter $filter) => [
                 'field' => $filter->field()->value,
                 'operator' => $filter->operator()->value,
                 'value' => $filter->value()->value,
             ],
             $this
         );
-    }
-
-    public static function type(): string
-    {
-        return Filter::class;
-    }
-
-    private static function filterBuilder(): callable
-    {
-        return fn (array $values) => Filter::fromValues($values);
     }
 }

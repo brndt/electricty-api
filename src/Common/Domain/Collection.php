@@ -6,11 +6,11 @@ namespace Electricity\Common\Domain;
 
 use ArrayIterator;
 use Countable;
-
 use IteratorAggregate;
 
+use function count;
+use function in_array;
 use function Lambdish\Phunctional\each;
-use function Lambdish\Phunctional\flat_map;
 
 abstract class Collection implements Countable, IteratorAggregate
 {
@@ -37,14 +37,14 @@ abstract class Collection implements Countable, IteratorAggregate
 
     public function count(): int
     {
-        return \count($this->items());
+        return count($this->items());
     }
 
     public function contains(mixed $item): bool
     {
         Assert::instanceOf(static::type(), $item);
 
-        return \in_array($item, $this->items(), false);
+        return in_array($item, $this->items(), false);
     }
 
     protected function each(callable $fn): void

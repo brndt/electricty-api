@@ -21,16 +21,15 @@ use function Lambdish\Phunctional\map;
 
 final class SearchSuspiciousReadingsCommand extends Command
 {
+    private const FILE_PATH = __DIR__ . '/../../Persistence/Data/';
+    protected static $defaultName = 'electricity:search-suspicious-readings';
+
     public function __construct(
         private readonly ReadingsRepositoryFactory $readingsRepositoryFactory,
         private readonly FileFactory $fileFactory,
     ) {
         parent::__construct();
     }
-
-    private const FILE_PATH = __DIR__ . '/../../Persistence/Data/';
-
-    protected static $defaultName = 'electricity:search-suspicious-readings';
 
     protected function configure(): void
     {

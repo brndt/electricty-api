@@ -18,6 +18,6 @@ final class Median
 
     public function asString(): string
     {
-        return (string) $this->value;
+        return (string)$this->value;
     }
 }

@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Electricity\Readings\Infrastructure\Persistence\Csv;
 
+use Closure;
 use Electricity\Readings\Domain\ClientId;
 use Electricity\Readings\Domain\ClientWithReadings;
 use Electricity\Readings\Domain\ReadingByPeriod;
+use Electricity\Readings\Domain\ReadingsByPeriodCollection;
 use Electricity\Readings\Domain\ReadingsRepository;
-use League\Csv\Reader;
-
 use Symfony\Component\HttpFoundation\File\File;
-
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 
 use function Lambdish\Phunctional\group_by;
@@ -35,18 +34,19 @@ final class CsvReadingsRepository implements ReadingsRepository
 
     private function readingsFromPrimitives(array $readingsGroupedByClientId): array
     {
-        return map($this->clientWithReadingsFromPrimitives(), $readingsGroupedByClientId);
+        return map($this->clientWithReadingsClosure(), $readingsGroupedByClientId);
     }
 
-    private function clientWithReadingsFromPrimitives(): \Closure
+    private function clientWithReadingsClosure(): Closure
     {
         return fn(array $clientReadings, string $clientId): ClientWithReadings => new ClientWithReadings(
-            new ClientId($clientId), $this->readingsByPeriodFromPrimitives($clientReadings),
+            new ClientId($clientId),
+            new ReadingsByPeriodCollection(map($this->readingsByPeriodClosure(), $clientReadings)),
         );
     }
 
-    private function readingsByPeriodFromPrimitives(array $clientReadings): array
+    private function readingsByPeriodClosure(): Closure
     {
-        return map(fn(array $reading) => new ReadingByPeriod($reading['period'], $reading['reading']), $clientReadings);
+        return fn(array $reading) => new ReadingByPeriod($reading['period'], $reading['reading']);
     }
 }
