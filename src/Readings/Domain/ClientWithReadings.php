@@ -16,15 +16,6 @@ final class ClientWithReadings
 
     public function sortReadingsByAsc(): self
     {
-        return
-            new self(
-                $this->clientId, sort(
-                fn(
-                    ReadingByPeriod $oneReading,
-                    ReadingByPeriod $otherReading
-                ): int => $oneReading->reading <=> $otherReading->reading,
-                $this->readings
-            )
-            );
+        return new self($this->clientId, sort(ReadingByPeriod::comparator(), $this->readings));
     }
 }
