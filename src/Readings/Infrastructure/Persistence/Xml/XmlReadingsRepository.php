@@ -29,10 +29,10 @@ final class XmlReadingsRepository implements ReadingsRepository
     {
         $readingsGroupedByClientId = group_by(fn($reading): string => $reading['@clientID'], $this->readings);
 
-        return $this->readingsFromPrimitives($readingsGroupedByClientId);
+        return $this->buildClientsWithReadings($readingsGroupedByClientId);
     }
 
-    private function readingsFromPrimitives(array $readingsGroupedByClientId): array
+    private function buildClientsWithReadings(array $readingsGroupedByClientId): array
     {
         return map($this->clientWithReadingsExtractor(), $readingsGroupedByClientId);
     }
