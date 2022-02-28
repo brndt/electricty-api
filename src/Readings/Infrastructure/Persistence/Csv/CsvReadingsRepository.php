@@ -10,6 +10,8 @@ use Electricity\Readings\Domain\ReadingByPeriod;
 use Electricity\Readings\Domain\ReadingsRepository;
 use League\Csv\Reader;
 
+use Symfony\Component\HttpFoundation\File\File;
+
 use function Lambdish\Phunctional\group_by;
 use function Lambdish\Phunctional\map;
 
@@ -17,9 +19,9 @@ final class CsvReadingsRepository implements ReadingsRepository
 {
     private Reader $csvReader;
 
-    public function __construct(private string $fileName)
+    public function __construct(File $file)
     {
-        $this->csvReader = Reader::createFromPath($this->fileName);
+        $this->csvReader = Reader::createFromFileObject($file->openFile());
         $this->csvReader->setHeaderOffset(0);
     }
 
