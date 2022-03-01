@@ -43,9 +43,9 @@ down:
 schema-update:
 	$(RUN) ./bin/console doctrine:schema:update --force
 
-.PHONY: test-acceptance
-test-acceptance:
-	$(RUN) ./vendor/bin/behat --format=pretty -v
+.PHONY: test-unit
+test-unit:
+	$(RUN) ./vendor/bin/phpunit
 
 .PHONY: wait-databases-start
 wait-databases-start:
