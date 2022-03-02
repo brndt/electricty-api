@@ -1,5 +1,6 @@
 current-dir := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 RUN = docker exec -t electricity-php
+ARGS := $(filter-out $(KNOWN_TARGETS),$(MAKECMDGOALS))
 
 .PHONY: build
 build: dependencies start
@@ -38,6 +39,10 @@ start:
 .PHONY: down
 down:
 	docker-compose down
+
+.PHONY: console
+console:
+	$(RUN) ./bin/console $(ARGS)
 
 .PHONY: test-unit
 test-unit:
