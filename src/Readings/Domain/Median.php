@@ -20,4 +20,15 @@ final class Median
     {
         return (string)$this->value;
     }
+
+    public static function fromReadings(ReadingsByPeriodCollection $readings): Median
+    {
+        /** @var ReadingByPeriod $sixthMonth */
+        $sixthMonth = $readings->getIterator()->offsetGet(5);
+
+        /** @var ReadingByPeriod $seventhMonth */
+        $seventhMonth = $readings->getIterator()->offsetGet(6);
+
+        return new Median(((int)$sixthMonth->reading + (int)$seventhMonth->reading) / 2);
+    }
 }

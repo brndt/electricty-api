@@ -7,6 +7,7 @@ namespace Electricity\Readings\Application\SearchSuspiciousReadings;
 use Closure;
 use Electricity\Readings\Domain\ClientWithCalculatedMedian;
 use Electricity\Readings\Domain\ClientWithReadings;
+use Electricity\Readings\Domain\Median;
 use Electricity\Readings\Domain\ReadingByPeriod;
 use Electricity\Readings\Domain\ReadingsRepository;
 
@@ -23,7 +24,7 @@ final class SearchSuspiciousReadingsApplicationService
     {
         $readings = $this->readingsRepository->all();
 
-        $sortedReadings = map($this->sortReadingsForEveryClient(), $readings);
+        $sortedReadings = map($this->sortReadingsForClient(), $readings);
 
         $readingsWithCalculatedMedian = map($this->calculateMedianForClient(), $sortedReadings);
 
@@ -34,17 +35,16 @@ final class SearchSuspiciousReadingsApplicationService
         return new SuspiciousReadingCollectionResponse($readingsAsResponse);
     }
 
-    private function sortReadingsForEveryClient(): Closure
+    private function sortReadingsForClient(): Closure
     {
         return fn(ClientWithReadings $readings) => $readings->sortReadingsByAsc();
     }
 
     private function calculateMedianForClient(): Closure
     {
-        return fn(ClientWithReadings $readings) => ClientWithCalculatedMedian::create(
-            $readings->clientId,
-            $readings->readings
-        );
+        return function(ClientWithReadings $clientWithReadings) {
+            return ClientWithCalculatedMedian::fromClientWithReadings($clientWithReadings);
+        };
     }
 
     private function searchSuspiciousReadingsForClient(): Closure

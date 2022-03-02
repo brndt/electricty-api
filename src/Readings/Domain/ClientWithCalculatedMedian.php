@@ -8,22 +8,19 @@ use function Lambdish\Phunctional\filter;
 
 final class ClientWithCalculatedMedian
 {
-    private function __construct(
+    public function __construct(
         public readonly ClientId $clientId,
         public readonly ReadingsByPeriodCollection $readings,
         public readonly Median $median,
     ) {
     }
 
-
-    public static function create(ClientId $clientId, ReadingsByPeriodCollection $readings): ClientWithCalculatedMedian
+    public static function fromClientWithReadings(ClientWithReadings $clientWithReadings): self
     {
-        $median = new Median(
-            ((int)$readings->getIterator()->offsetGet(5)->reading + (int)$readings->getIterator()->offsetGet(
-                    6
-                )->reading) / 2
+        $median = Median::fromReadings($clientWithReadings->readings);
+        return new self(
+            $clientWithReadings->clientId, $clientWithReadings->readings, $median
         );
-        return new self($clientId, $readings, $median);
     }
 
     public function filteredBySuspicious(): ClientWithCalculatedMedian
