@@ -7,5 +7,5 @@ make build
 
 Run test
 ```bash
-make test-acceptance
+make test-unit
 ```
