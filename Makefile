@@ -1,6 +1,6 @@
 current-dir := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 RUN = docker exec -t electricity-php
-ARGS := $(filter-out $(KNOWN_TARGETS),$(MAKECMDGOALS))
+ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 
 .PHONY: build
 build: dependencies start
