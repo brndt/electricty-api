@@ -2,7 +2,7 @@ current-dir := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 RUN = docker exec -t electricity-php
 
 .PHONY: build
-build: dependencies start wait-databases-start schema-update
+build: dependencies start
 
 .PHONY: dependencies
 dependencies: composer-install
@@ -39,19 +39,6 @@ start:
 down:
 	docker-compose down
 
-.PHONY: schema-update
-schema-update:
-	$(RUN) ./bin/console doctrine:schema:update --force
-
 .PHONY: test-unit
 test-unit:
 	$(RUN) ./vendor/bin/phpunit
-
-.PHONY: wait-databases-start
-wait-databases-start:
-	chmod +x ./ping-mysql.sh
-	./ping-mysql.sh
-
-.PHONY: ping-mysql
-ping-mysql:
-	@docker exec electricity-mysql mysqladmin --user=root --host "127.0.0.1" ping --silent
