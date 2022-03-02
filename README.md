@@ -1,16 +1,16 @@
 # electricity-api ⚡️...🌍
 
-###Start project
+### Start project
 ```bash
 make build
 ```
 
-###Run test
+### Run test
 ```bash
 make test-unit
 ```
 
-###Existing commands
+### Existing commands
 ```bash
 make electricity:search-suspicious-readings <filename>
 ```
